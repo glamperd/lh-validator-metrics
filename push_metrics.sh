@@ -1,10 +1,9 @@
 #!/bin/bash
-vals1=`ls -mQ $HOME/.lighthouse/validators | grep 0x`
-vals=${vals1%?}
+vals=$(ls -Q $HOME/.lighthouse/validators | grep 0x | awk '/START/{if (x)print x;x="";next}{x=(!x)?$0:x","$0;}END{print x;}')
 echo $vals
  
-bv=`curl -s -X POST http://localhost:5052/beacon/validators -d "{\"pubkeys\": [ ${vals} ]}"`
-# echo "${bv}" | jq
+bv=$(curl -s -X POST http://localhost:5052/beacon/validators -d "{\"pubkeys\": [ ${vals} ]}")
+echo "${bv}" | jq
 
 echo "${bv}" | jq -r 'keys_unsorted[] as $k | (if $k == 0 then "#TYPE validator_balance gauge\n" else "" end) + "validator_balance{index=\"\(.[$k].validator_index)\"} \(.[$k].balance)"' \
  |  curl --data-binary @- http://localhost:9091/metrics/job/validators
