@@ -1,0 +1,12 @@
+[Unit]
+Description=Prometheus Push Gateway daemon
+After=network.target
+
+[Service]
+ExecStart=/home/ethereum/pushgateway/pushgateway
+Restart=always
+User=ethereum
+
+[Install]
+WantedBy=multi-user.target
+
