@@ -20,4 +20,15 @@ echo "${bv}" | jq -r 'reduce .[].balance as $b (0; . + $b) | "#TYPE balance_all_
  | curl --data-binary @- http://localhost:9091/metrics/job/validators
 echo "validator push done $?"
 
+head=$(curl -s http://localhost:5052/beacon/head)
+slot=$(echo "${head}" | jq '.slot')
+epoch=$(echo "${head}" | jq '.slot/32 | floor')
+
+echo "slot ${slot} epoch ${epoch}"
+
+duties=$(curl -s -X POST http://localhost:5052/validator/duties -d "{\"pubkeys\": [ ${vals} ], \"epoch\": ${epoch}}")
+att=$(echo "${duties}" | jq -r 'reduce .[] as $v ("#TYPE scheduled_attestation_slot counter@"; . + "scheduled_attestation_slot{index=\"\($v.validator_index)\"} \($v.attestation_slot)@") | split("@")[]')
+echo "attestation ${att}"
+echo "${att}" | curl --data-binary @- http://localhost:9091/metrics/job/validators
+
 
